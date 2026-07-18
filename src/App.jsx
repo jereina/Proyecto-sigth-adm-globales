@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import VacantesPage from './pages/VacantesPage'
 import CargosPage from './pages/CargosPage'
 import UsuariosPage from './pages/UsuariosPage'
+import OrganigramaPage from './pages/OrganigramaPage'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             <Route index element={<Navigate to="/vacantes" replace />} />
             <Route path="vacantes" element={<VacantesPage />} />
             <Route path="cargos" element={<CargosPage />} />
+            <Route path="organigrama" element={<OrganigramaPage />} />
             <Route path="usuarios" element={<UsuariosPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
