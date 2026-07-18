@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import VacantesPage from './pages/VacantesPage'
+import CargosPage from './pages/CargosPage'
 
 export default function App() {
   return (
@@ -19,7 +21,11 @@ export default function App() {
                 <Dashboard />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="/vacantes" replace />} />
+            <Route path="vacantes" element={<VacantesPage />} />
+            <Route path="cargos" element={<CargosPage />} />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

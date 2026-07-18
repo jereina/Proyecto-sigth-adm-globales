@@ -1,6 +1,12 @@
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import GerenteDashboard from './GerenteDashboard'
-import SuperadminDashboard from './SuperadminDashboard'
+import Sidebar from '../components/Sidebar'
+
+const ETIQUETAS_ROL = {
+  superadmin: 'Recursos Humanos',
+  gerente: 'Gerente de departamento',
+  coordinador: 'Coordinador',
+}
 
 export default function Dashboard() {
   const { user, perfil, signOut } = useAuth()
@@ -24,9 +30,7 @@ export default function Dashboard() {
         <div className="usuario-encabezado">
           <div className="info-usuario">
             <span className="nombre-usuario">{perfil.nombre_completo}</span>
-            <span className="rol-usuario">
-              {perfil.rol === 'superadmin' ? 'Recursos Humanos' : 'Gerente de departamento'}
-            </span>
+            <span className="rol-usuario">{ETIQUETAS_ROL[perfil.rol] ?? perfil.rol}</span>
           </div>
           <button className="boton boton-secundario" onClick={signOut}>
             Cerrar sesión
@@ -34,13 +38,13 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="contenido-principal">
-        {perfil.rol === 'superadmin' ? (
-          <SuperadminDashboard />
-        ) : (
-          <GerenteDashboard perfil={perfil} userId={user.id} />
-        )}
-      </main>
+      <div className="cuerpo-app">
+        <Sidebar />
+
+        <main className="contenido-principal">
+          <Outlet context={{ perfil, user }} />
+        </main>
+      </div>
     </div>
   )
 }

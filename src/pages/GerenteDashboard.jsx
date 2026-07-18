@@ -5,7 +5,7 @@ import NuevaVacanteModal from '../components/NuevaVacanteModal'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
 
-export default function GerenteDashboard({ perfil, userId }) {
+export default function GerenteDashboard({ perfil, userId, soloLectura = false }) {
   const [vacantes, setVacantes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -39,9 +39,11 @@ export default function GerenteDashboard({ perfil, userId }) {
           <h2>Vacantes de mi departamento</h2>
           <p className="texto-atenuado">Solicitudes registradas para tu área.</p>
         </div>
-        <button className="boton boton-primario" onClick={() => setModalAbierto(true)}>
-          + Nueva solicitud de vacante
-        </button>
+        {!soloLectura && (
+          <button className="boton boton-primario" onClick={() => setModalAbierto(true)}>
+            + Nueva solicitud de vacante
+          </button>
+        )}
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
