@@ -29,8 +29,11 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
     }
   }, [departamentoId])
 
-  const cargoSeleccionado = cargos.find((c) => c.id === cargoId)
+  const cargoSeleccionado = cargos.find((c) => String(c.id) === cargoId)
   const sinCargos = !cargandoCargos && cargos.length === 0
+
+  // eslint-disable-next-line no-console
+  console.log('Cargo seleccionado:', cargoSeleccionado?.nombre, '- Descripción:', cargoSeleccionado?.descripcion)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
