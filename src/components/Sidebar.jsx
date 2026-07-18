@@ -1,15 +1,18 @@
 import { NavLink } from 'react-router-dom'
 
 const SECCIONES = [
-  { to: '/vacantes', etiqueta: 'Vacantes', icono: '📋' },
-  { to: '/cargos', etiqueta: 'Descripción de cargo', icono: '🗂️' },
+  { to: '/vacantes', etiqueta: 'Vacantes', icono: '📋', roles: ['superadmin', 'gerente', 'coordinador'] },
+  { to: '/cargos', etiqueta: 'Descripción de cargo', icono: '🗂️', roles: ['superadmin', 'gerente', 'coordinador'] },
+  { to: '/usuarios', etiqueta: 'Gestión de usuarios', icono: '👥', roles: ['superadmin'] },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ rol }) {
+  const secciones = SECCIONES.filter((seccion) => seccion.roles.includes(rol))
+
   return (
     <nav className="barra-lateral">
       <ul className="lista-lateral">
-        {SECCIONES.map((seccion) => (
+        {secciones.map((seccion) => (
           <li key={seccion.to}>
             <NavLink
               to={seccion.to}

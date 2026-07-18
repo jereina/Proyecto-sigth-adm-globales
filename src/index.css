@@ -99,6 +99,23 @@ p {
   text-decoration: underline;
 }
 
+/* ---------- Pantalla de espera ---------- */
+
+.tarjeta-pendiente {
+  text-align: center;
+}
+
+.icono-pendiente {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.texto-centrado {
+  text-align: center;
+  line-height: 1.6;
+  margin: 4px 0 24px;
+}
+
 /* ---------- Formularios ---------- */
 
 .formulario {
@@ -409,6 +426,24 @@ p {
   background: #fafbfd;
 }
 
+.tabla tbody tr.fila-pendiente {
+  background: #fffbeb;
+}
+
+.tabla tbody tr.fila-pendiente:hover {
+  background: #fef3c7;
+}
+
+.tabla select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  min-width: 160px;
+}
+
 .celda-principal {
   font-weight: 600;
 }
@@ -473,6 +508,11 @@ p {
 .badge-departamento {
   background: #e0e7ff;
   color: #3730a3;
+}
+
+.badge-superadmin {
+  background: var(--color-primario);
+  color: #fff;
 }
 
 /* ---------- Tarjetas de cargo ---------- */

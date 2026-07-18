@@ -1,11 +1,13 @@
 import { Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Sidebar from '../components/Sidebar'
+import PantallaPendiente from './PantallaPendiente'
 
 const ETIQUETAS_ROL = {
   superadmin: 'Recursos Humanos',
   gerente: 'Gerente de departamento',
   coordinador: 'Coordinador',
+  pendiente: 'Pendiente de activación',
 }
 
 export default function Dashboard() {
@@ -17,6 +19,10 @@ export default function Dashboard() {
         <div className="spinner" />
       </div>
     )
+  }
+
+  if (perfil.rol === 'pendiente') {
+    return <PantallaPendiente />
   }
 
   return (
@@ -39,7 +45,7 @@ export default function Dashboard() {
       </header>
 
       <div className="cuerpo-app">
-        <Sidebar />
+        <Sidebar rol={perfil.rol} />
 
         <main className="contenido-principal">
           <Outlet context={{ perfil, user }} />
