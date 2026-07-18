@@ -1,23 +1,52 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClose, onCreada }) {
-  const [cargo, setCargo] = useState('')
+  const [cargos, setCargos] = useState([])
+  const [cargandoCargos, setCargandoCargos] = useState(true)
+  const [cargoId, setCargoId] = useState('')
   const [cantidad, setCantidad] = useState(1)
-  const [descripcion, setDescripcion] = useState('')
   const [prioridad, setPrioridad] = useState('media')
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
 
+  useEffect(() => {
+    let activo = true
+
+    supabase
+      .from('cargos')
+      .select('id, nombre, descripcion')
+      .eq('departamento_id', departamentoId)
+      .order('nombre')
+      .then(({ data, error }) => {
+        if (!activo) return
+        if (!error) setCargos(data)
+        setCargandoCargos(false)
+      })
+
+    return () => {
+      activo = false
+    }
+  }, [departamentoId])
+
+  const cargoSeleccionado = cargos.find((c) => c.id === cargoId)
+  const sinCargos = !cargandoCargos && cargos.length === 0
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (!cargoSeleccionado) {
+      setError('Selecciona un cargo de la lista.')
+      return
+    }
+
     setEnviando(true)
 
     const { error } = await supabase.from('vacantes').insert({
-      cargo,
+      cargo: cargoSeleccionado.nombre,
       departamento_id: departamentoId,
-      descripcion,
+      descripcion: cargoSeleccionado.descripcion,
       cantidad: Number(cantidad),
       prioridad,
       solicitado_por: solicitadoPor,
@@ -46,14 +75,29 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
         <form onSubmit={handleSubmit} className="formulario">
           <label>
             Cargo
-            <input
-              type="text"
+            <select
               required
-              value={cargo}
-              onChange={(e) => setCargo(e.target.value)}
-              placeholder="Ej. Analista de Sistemas"
-            />
+              value={cargoId}
+              onChange={(e) => setCargoId(e.target.value)}
+              disabled={cargandoCargos || sinCargos}
+            >
+              <option value="" disabled>
+                {cargandoCargos ? 'Cargando cargos…' : 'Selecciona un cargo'}
+              </option>
+              {cargos.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
           </label>
+
+          {sinCargos && (
+            <p className="mensaje-error">
+              Aún no has creado cargos para tu departamento. Ve a "Descripción de cargo" para crear uno
+              antes de publicar una vacante.
+            </p>
+          )}
 
           <label>
             Cantidad de vacantes
@@ -79,9 +123,9 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
             Descripción
             <textarea
               rows={4}
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              placeholder="Detalla el perfil y las responsabilidades del cargo"
+              value={cargoSeleccionado?.descripcion ?? ''}
+              readOnly
+              placeholder="Selecciona un cargo para ver su descripción"
             />
           </label>
 
@@ -91,7 +135,7 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
             <button type="button" className="boton boton-secundario" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="boton boton-primario" disabled={enviando}>
+            <button type="submit" className="boton boton-primario" disabled={enviando || sinCargos}>
               {enviando ? 'Enviando…' : 'Enviar solicitud'}
             </button>
           </div>

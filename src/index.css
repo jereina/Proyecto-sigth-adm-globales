@@ -159,6 +159,14 @@ p {
   resize: vertical;
 }
 
+.formulario input[readonly],
+.formulario textarea[readonly] {
+  background: var(--color-fondo);
+  color: var(--color-texto-atenuado);
+  cursor: not-allowed;
+  resize: none;
+}
+
 .mensaje-error {
   color: var(--color-error);
   font-size: 13px;
