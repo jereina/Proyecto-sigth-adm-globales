@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { verificarYResolverPrioridadAlta } from '../lib/prioridadAlta'
 
-export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClose, onCreada }) {
+export default function EditarVacanteModal({ vacante, onClose, onGuardada }) {
   const [cargos, setCargos] = useState([])
   const [cargandoCargos, setCargandoCargos] = useState(true)
   const [cargoId, setCargoId] = useState('')
-  const [cantidad, setCantidad] = useState(1)
-  const [prioridad, setPrioridad] = useState('media')
+  const [cantidad, setCantidad] = useState(vacante.cantidad)
+  const [prioridad, setPrioridad] = useState(vacante.prioridad)
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
 
@@ -17,21 +17,26 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
     supabase
       .from('cargos')
       .select('id, nombre, descripcion')
-      .eq('departamento_id', departamentoId)
+      .eq('departamento_id', vacante.departamento_id)
       .order('nombre')
       .then(({ data, error }) => {
         if (!activo) return
-        if (!error) setCargos(data)
+        if (!error) {
+          setCargos(data)
+          const cargoActual = data.find((c) => c.nombre === vacante.cargo)
+          if (cargoActual) setCargoId(String(cargoActual.id))
+        }
         setCargandoCargos(false)
       })
 
     return () => {
       activo = false
     }
-  }, [departamentoId])
+  }, [vacante.departamento_id, vacante.cargo])
 
   const cargoSeleccionado = cargos.find((c) => String(c.id) === cargoId)
   const sinCargos = !cargandoCargos && cargos.length === 0
+  const descripcionMostrada = cargoSeleccionado?.descripcion ?? vacante.descripcion ?? ''
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -44,7 +49,11 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
 
     setEnviando(true)
 
-    const resultado = await verificarYResolverPrioridadAlta({ prioridad, departamentoId })
+    const resultado = await verificarYResolverPrioridadAlta({
+      prioridad,
+      departamentoId: vacante.departamento_id,
+      vacanteIdActual: vacante.id,
+    })
 
     if (!resultado.continuar) {
       if (resultado.error) setError(resultado.error)
@@ -52,30 +61,31 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
       return
     }
 
-    const { error } = await supabase.from('vacantes').insert({
-      cargo: cargoSeleccionado.nombre,
-      departamento_id: departamentoId,
-      descripcion: cargoSeleccionado.descripcion,
-      cantidad: Number(cantidad),
-      prioridad,
-      solicitado_por: solicitadoPor,
-    })
+    const { error } = await supabase
+      .from('vacantes')
+      .update({
+        cargo: cargoSeleccionado.nombre,
+        descripcion: cargoSeleccionado.descripcion,
+        cantidad: Number(cantidad),
+        prioridad,
+      })
+      .eq('id', vacante.id)
 
     setEnviando(false)
 
     if (error) {
-      setError('No se pudo enviar la solicitud. Intenta de nuevo.')
+      setError('No se pudo guardar la vacante. Intenta de nuevo.')
       return
     }
 
-    onCreada()
+    onGuardada()
   }
 
   return (
     <div className="fondo-modal" onClick={onClose}>
       <div className="tarjeta-modal" onClick={(e) => e.stopPropagation()}>
         <div className="cabecera-modal">
-          <h2>Nueva solicitud de vacante</h2>
+          <h2>Editar vacante</h2>
           <button className="boton-cerrar" onClick={onClose} aria-label="Cerrar">
             ×
           </button>
@@ -103,8 +113,8 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
 
           {sinCargos && (
             <p className="mensaje-error">
-              Aún no has creado cargos para tu departamento. Ve a "Descripción de cargo" para crear uno
-              antes de publicar una vacante.
+              Este departamento ya no tiene cargos disponibles en "Descripción de cargo". Crea uno antes
+              de guardar los cambios.
             </p>
           )}
 
@@ -132,7 +142,7 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
             Descripción
             <textarea
               rows={4}
-              value={cargoSeleccionado?.descripcion ?? ''}
+              value={descripcionMostrada}
               readOnly
               placeholder="Selecciona un cargo para ver su descripción"
             />
@@ -145,7 +155,7 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
               Cancelar
             </button>
             <button type="submit" className="boton boton-primario" disabled={enviando || sinCargos}>
-              {enviando ? 'Enviando…' : 'Enviar solicitud'}
+              {enviando ? 'Guardando…' : 'Guardar cambios'}
             </button>
           </div>
         </form>

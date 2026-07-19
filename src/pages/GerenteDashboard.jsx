@@ -4,6 +4,7 @@ import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
 import NuevaVacanteModal from '../components/NuevaVacanteModal'
 import VerCandidatosModal from '../components/VerCandidatosModal'
 import VacanteDetalleModal from '../components/VacanteDetalleModal'
+import EditarVacanteModal from '../components/EditarVacanteModal'
 import { ordenarVacantesPorPrioridad } from '../lib/ordenVacantes'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
@@ -14,9 +15,11 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
   const [vacantes, setVacantes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [mensajeExito, setMensajeExito] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
   const [vacanteDetalle, setVacanteDetalle] = useState(null)
   const [vacanteCandidatos, setVacanteCandidatos] = useState(null)
+  const [vacanteEditar, setVacanteEditar] = useState(null)
 
   const cargarVacantes = useCallback(async () => {
     setCargando(true)
@@ -56,6 +59,7 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
+      {mensajeExito && <p className="mensaje-exito">{mensajeExito}</p>}
 
       {cargando ? (
         <p className="texto-atenuado">Cargando vacantes…</p>
@@ -120,6 +124,14 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
                 }
               : undefined
           }
+          onEditar={
+            esGerente
+              ? () => {
+                  setVacanteEditar(vacanteDetalle)
+                  setVacanteDetalle(null)
+                }
+              : undefined
+          }
         />
       )}
 
@@ -129,6 +141,18 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
           onClose={() => setVacanteCandidatos(null)}
           onContratado={() => {
             setVacanteCandidatos(null)
+            cargarVacantes()
+          }}
+        />
+      )}
+
+      {vacanteEditar && (
+        <EditarVacanteModal
+          vacante={vacanteEditar}
+          onClose={() => setVacanteEditar(null)}
+          onGuardada={() => {
+            setVacanteEditar(null)
+            setMensajeExito('Vacante actualizada correctamente.')
             cargarVacantes()
           }}
         />

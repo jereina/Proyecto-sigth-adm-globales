@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
 import CandidatosModal from '../components/CandidatosModal'
 import VacanteDetalleModal from '../components/VacanteDetalleModal'
+import EditarVacanteModal from '../components/EditarVacanteModal'
 import { ordenarVacantesPorPrioridad } from '../lib/ordenVacantes'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
@@ -12,10 +13,12 @@ export default function SuperadminDashboard() {
   const [departamentos, setDepartamentos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [mensajeExito, setMensajeExito] = useState('')
   const [filtroDepartamento, setFiltroDepartamento] = useState('todos')
   const [filtroEstado, setFiltroEstado] = useState('todos')
   const [vacanteDetalle, setVacanteDetalle] = useState(null)
   const [vacanteCandidatos, setVacanteCandidatos] = useState(null)
+  const [vacanteEditar, setVacanteEditar] = useState(null)
   const [archivandoId, setArchivandoId] = useState(null)
 
   const cargarDatos = useCallback(async () => {
@@ -117,6 +120,7 @@ export default function SuperadminDashboard() {
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
+      {mensajeExito && <p className="mensaje-exito">{mensajeExito}</p>}
 
       {cargando ? (
         <p className="texto-atenuado">Cargando vacantes…</p>
@@ -172,6 +176,10 @@ export default function SuperadminDashboard() {
           textoBotonCandidatos="Gestionar candidatos"
           onArchivar={() => handleArchivar(vacanteDetalle)}
           archivando={archivandoId === vacanteDetalle.id}
+          onEditar={() => {
+            setVacanteEditar(vacanteDetalle)
+            setVacanteDetalle(null)
+          }}
         />
       )}
 
@@ -180,6 +188,18 @@ export default function SuperadminDashboard() {
           vacante={vacanteCandidatos}
           onClose={() => setVacanteCandidatos(null)}
           onEnviado={handleCandidatosEnviados}
+        />
+      )}
+
+      {vacanteEditar && (
+        <EditarVacanteModal
+          vacante={vacanteEditar}
+          onClose={() => setVacanteEditar(null)}
+          onGuardada={() => {
+            setVacanteEditar(null)
+            setMensajeExito('Vacante actualizada correctamente.')
+            cargarDatos()
+          }}
         />
       )}
     </div>

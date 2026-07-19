@@ -9,8 +9,10 @@ export default function VacanteDetalleModal({
   textoBotonCandidatos = 'Ver candidatos',
   onArchivar,
   archivando = false,
+  onEditar,
 }) {
   const mostrarArchivar = Boolean(onArchivar) && vacante.estado === 'cerrada'
+  const mostrarEditar = Boolean(onEditar) && vacante.estado !== 'cerrada'
 
   return (
     <div className="fondo-modal" onClick={onClose}>
@@ -72,8 +74,13 @@ export default function VacanteDetalleModal({
           </div>
         </div>
 
-        {(onVerCandidatos || mostrarArchivar) && (
+        {(mostrarEditar || onVerCandidatos || mostrarArchivar) && (
           <div className="acciones-modal">
+            {mostrarEditar && (
+              <button className="boton boton-secundario" onClick={onEditar}>
+                Editar
+              </button>
+            )}
             {onVerCandidatos && (
               <button className="boton boton-secundario" onClick={onVerCandidatos}>
                 {textoBotonCandidatos}
