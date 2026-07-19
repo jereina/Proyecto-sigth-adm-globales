@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
+import CandidatosModal from '../components/CandidatosModal'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
 
@@ -11,6 +12,7 @@ export default function SuperadminDashboard() {
   const [error, setError] = useState('')
   const [filtroDepartamento, setFiltroDepartamento] = useState('todos')
   const [filtroEstado, setFiltroEstado] = useState('todos')
+  const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null)
 
   const cargarDatos = useCallback(async () => {
     setCargando(true)
@@ -40,11 +42,21 @@ export default function SuperadminDashboard() {
 
   const vacantesFiltradas = useMemo(() => {
     return vacantes.filter((v) => {
-      const coincideDepto = filtroDepartamento === 'todos' || v.departamento_id === filtroDepartamento
+      const coincideDepto =
+        filtroDepartamento === 'todos' || String(v.departamento_id) === filtroDepartamento
       const coincideEstado = filtroEstado === 'todos' || v.estado === filtroEstado
       return coincideDepto && coincideEstado
     })
   }, [vacantes, filtroDepartamento, filtroEstado])
+
+  const handleCandidatosEnviados = (vacanteId) => {
+    setVacantes((prev) =>
+      prev.map((v) => (v.id === vacanteId ? { ...v, candidatos_enviados: true } : v)),
+    )
+    setVacanteSeleccionada((actual) =>
+      actual && actual.id === vacanteId ? { ...actual, candidatos_enviados: true } : actual,
+    )
+  }
 
   return (
     <div className="contenedor-dashboard">
@@ -99,6 +111,8 @@ export default function SuperadminDashboard() {
                 <th>Prioridad</th>
                 <th>Estado</th>
                 <th>Fecha de solicitud</th>
+                <th>Candidatos</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -114,11 +128,31 @@ export default function SuperadminDashboard() {
                   <td><PrioridadBadge prioridad={v.prioridad} /></td>
                   <td><EstadoBadge estado={v.estado} /></td>
                   <td>{formateador.format(new Date(v.fecha_solicitud))}</td>
+                  <td>
+                    {v.candidatos_enviados ? (
+                      <span className="badge badge-estado-abierta">Enviados</span>
+                    ) : (
+                      <span className="texto-atenuado">Sin enviar</span>
+                    )}
+                  </td>
+                  <td>
+                    <button className="boton boton-secundario" onClick={() => setVacanteSeleccionada(v)}>
+                      Gestionar candidatos
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {vacanteSeleccionada && (
+        <CandidatosModal
+          vacante={vacanteSeleccionada}
+          onClose={() => setVacanteSeleccionada(null)}
+          onEnviado={handleCandidatosEnviados}
+        />
       )}
     </div>
   )

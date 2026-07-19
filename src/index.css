@@ -650,6 +650,32 @@ p {
   margin-top: 4px;
 }
 
+.tarjeta-modal-ancha {
+  max-width: 760px;
+}
+
+.fila-formulario {
+  display: flex;
+  gap: 16px;
+}
+
+.fila-formulario > label {
+  flex: 1;
+}
+
+.separador-modal {
+  height: 1px;
+  background: var(--color-borde);
+  margin: 24px 0;
+}
+
+.pie-modal-candidatos {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 20px;
+}
+
 /* ---------- Organigrama ---------- */
 
 .visor-organigrama {
@@ -732,5 +758,10 @@ p {
   .lista-lateral {
     flex-direction: row;
     overflow-x: auto;
+  }
+
+  .fila-formulario {
+    flex-direction: column;
+    gap: 16px;
   }
 }
