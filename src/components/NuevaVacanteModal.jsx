@@ -32,9 +32,6 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
   const cargoSeleccionado = cargos.find((c) => String(c.id) === cargoId)
   const sinCargos = !cargandoCargos && cargos.length === 0
 
-  // eslint-disable-next-line no-console
-  console.log('Cargo seleccionado:', cargoSeleccionado?.nombre, '- Descripción:', cargoSeleccionado?.descripcion)
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -45,6 +42,44 @@ export default function NuevaVacanteModal({ departamentoId, solicitadoPor, onClo
     }
 
     setEnviando(true)
+
+    if (prioridad === 'alta') {
+      const { data: vacantesAltaActivas, error: errorConsulta } = await supabase
+        .from('vacantes')
+        .select('id, cargo')
+        .eq('departamento_id', departamentoId)
+        .eq('prioridad', 'alta')
+        .in('estado', ['abierta', 'en_proceso'])
+
+      if (errorConsulta) {
+        setError('No se pudo verificar la prioridad del departamento. Intenta de nuevo.')
+        setEnviando(false)
+        return
+      }
+
+      if (vacantesAltaActivas && vacantesAltaActivas.length > 0) {
+        const vacanteAltaActual = vacantesAltaActivas[0]
+        const confirmado = window.confirm(
+          `Tu departamento ya tiene una vacante en prioridad Alta: "${vacanteAltaActual.cargo}". Solo puede haber una prioridad Alta activa a la vez. ¿Deseas reemplazarla? La vacante anterior pasará a prioridad Media.`,
+        )
+
+        if (!confirmado) {
+          setEnviando(false)
+          return
+        }
+
+        const { error: errorDegradar } = await supabase
+          .from('vacantes')
+          .update({ prioridad: 'media' })
+          .in('id', vacantesAltaActivas.map((v) => v.id))
+
+        if (errorDegradar) {
+          setError('No se pudo actualizar la vacante anterior. Intenta de nuevo.')
+          setEnviando(false)
+          return
+        }
+      }
+    }
 
     const { error } = await supabase.from('vacantes').insert({
       cargo: cargoSeleccionado.nombre,

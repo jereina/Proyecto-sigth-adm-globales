@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
 import CandidatosModal from '../components/CandidatosModal'
 import VacanteDetalleModal from '../components/VacanteDetalleModal'
+import { ordenarVacantesPorPrioridad } from '../lib/ordenVacantes'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
 
@@ -45,12 +46,13 @@ export default function SuperadminDashboard() {
   }, [cargarDatos])
 
   const vacantesFiltradas = useMemo(() => {
-    return vacantes.filter((v) => {
+    const filtradas = vacantes.filter((v) => {
       const coincideDepto =
         filtroDepartamento === 'todos' || String(v.departamento_id) === filtroDepartamento
       const coincideEstado = filtroEstado === 'todos' || v.estado === filtroEstado
       return coincideDepto && coincideEstado
     })
+    return ordenarVacantesPorPrioridad(filtradas)
   }, [vacantes, filtroDepartamento, filtroEstado])
 
   const handleCandidatosEnviados = (vacanteId) => {

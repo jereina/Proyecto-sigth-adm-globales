@@ -4,6 +4,7 @@ import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
 import NuevaVacanteModal from '../components/NuevaVacanteModal'
 import VerCandidatosModal from '../components/VerCandidatosModal'
 import VacanteDetalleModal from '../components/VacanteDetalleModal'
+import { ordenarVacantesPorPrioridad } from '../lib/ordenVacantes'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
 
@@ -30,7 +31,8 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
       setError('No se pudieron cargar las vacantes.')
     } else {
       // Las vacantes cerradas por contratación pasan a "Histórico" y ya no viven aquí.
-      setVacantes(data.filter((v) => !(v.estado === 'cerrada' && v.fecha_contratacion)))
+      const activas = data.filter((v) => !(v.estado === 'cerrada' && v.fecha_contratacion))
+      setVacantes(ordenarVacantesPorPrioridad(activas))
     }
     setCargando(false)
   }, [])
