@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
 import CandidatosModal from '../components/CandidatosModal'
+import VacanteDetalleModal from '../components/VacanteDetalleModal'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
 
@@ -12,7 +13,9 @@ export default function SuperadminDashboard() {
   const [error, setError] = useState('')
   const [filtroDepartamento, setFiltroDepartamento] = useState('todos')
   const [filtroEstado, setFiltroEstado] = useState('todos')
-  const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null)
+  const [vacanteDetalle, setVacanteDetalle] = useState(null)
+  const [vacanteCandidatos, setVacanteCandidatos] = useState(null)
+  const [archivandoId, setArchivandoId] = useState(null)
 
   const cargarDatos = useCallback(async () => {
     setCargando(true)
@@ -30,7 +33,8 @@ export default function SuperadminDashboard() {
     if (errorVacantes || errorDeptos) {
       setError('No se pudieron cargar las vacantes.')
     } else {
-      setVacantes(dataVacantes)
+      // Las vacantes archivadas ya viven en "Histórico" y no se repiten aquí.
+      setVacantes(dataVacantes.filter((v) => !v.archivada))
       setDepartamentos(dataDeptos)
     }
     setCargando(false)
@@ -53,9 +57,28 @@ export default function SuperadminDashboard() {
     setVacantes((prev) =>
       prev.map((v) => (v.id === vacanteId ? { ...v, candidatos_enviados: true } : v)),
     )
-    setVacanteSeleccionada((actual) =>
-      actual && actual.id === vacanteId ? { ...actual, candidatos_enviados: true } : actual,
+  }
+
+  const handleArchivar = async (vacante) => {
+    const confirmado = window.confirm(
+      `¿Archivar la vacante "${vacante.cargo}"? Dejará de verse en esta lista, pero seguirá disponible en el Histórico.`,
     )
+    if (!confirmado) return
+
+    setArchivandoId(vacante.id)
+    setError('')
+
+    const { error } = await supabase.from('vacantes').update({ archivada: true }).eq('id', vacante.id)
+
+    setArchivandoId(null)
+
+    if (error) {
+      setError('No se pudo archivar la vacante.')
+      return
+    }
+
+    setVacantes((prev) => prev.filter((v) => v.id !== vacante.id))
+    setVacanteDetalle(null)
   }
 
   return (
@@ -111,17 +134,13 @@ export default function SuperadminDashboard() {
                 <th>Prioridad</th>
                 <th>Estado</th>
                 <th>Fecha de solicitud</th>
-                <th>Candidatos</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {vacantesFiltradas.map((v) => (
                 <tr key={v.id}>
-                  <td>
-                    <div className="celda-principal">{v.cargo}</div>
-                    {v.descripcion && <div className="celda-secundaria">{v.descripcion}</div>}
-                  </td>
+                  <td className="celda-principal">{v.cargo}</td>
                   <td>{v.departamento?.nombre ?? '—'}</td>
                   <td>{v.solicitante?.nombre_completo ?? '—'}</td>
                   <td>{v.cantidad}</td>
@@ -129,15 +148,8 @@ export default function SuperadminDashboard() {
                   <td><EstadoBadge estado={v.estado} /></td>
                   <td>{formateador.format(new Date(v.fecha_solicitud))}</td>
                   <td>
-                    {v.candidatos_enviados ? (
-                      <span className="badge badge-estado-abierta">Enviados</span>
-                    ) : (
-                      <span className="texto-atenuado">Sin enviar</span>
-                    )}
-                  </td>
-                  <td>
-                    <button className="boton boton-secundario" onClick={() => setVacanteSeleccionada(v)}>
-                      Gestionar candidatos
+                    <button className="boton boton-secundario" onClick={() => setVacanteDetalle(v)}>
+                      Ver detalle
                     </button>
                   </td>
                 </tr>
@@ -147,10 +159,24 @@ export default function SuperadminDashboard() {
         </div>
       )}
 
-      {vacanteSeleccionada && (
+      {vacanteDetalle && (
+        <VacanteDetalleModal
+          vacante={vacanteDetalle}
+          onClose={() => setVacanteDetalle(null)}
+          onVerCandidatos={() => {
+            setVacanteCandidatos(vacanteDetalle)
+            setVacanteDetalle(null)
+          }}
+          textoBotonCandidatos="Gestionar candidatos"
+          onArchivar={() => handleArchivar(vacanteDetalle)}
+          archivando={archivandoId === vacanteDetalle.id}
+        />
+      )}
+
+      {vacanteCandidatos && (
         <CandidatosModal
-          vacante={vacanteSeleccionada}
-          onClose={() => setVacanteSeleccionada(null)}
+          vacante={vacanteCandidatos}
+          onClose={() => setVacanteCandidatos(null)}
           onEnviado={handleCandidatosEnviados}
         />
       )}

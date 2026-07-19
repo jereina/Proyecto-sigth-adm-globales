@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
 import NuevaVacanteModal from '../components/NuevaVacanteModal'
 import VerCandidatosModal from '../components/VerCandidatosModal'
+import VacanteDetalleModal from '../components/VacanteDetalleModal'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
 
@@ -13,7 +14,8 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
-  const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null)
+  const [vacanteDetalle, setVacanteDetalle] = useState(null)
+  const [vacanteCandidatos, setVacanteCandidatos] = useState(null)
 
   const cargarVacantes = useCallback(async () => {
     setCargando(true)
@@ -69,37 +71,22 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
                 <th>Prioridad</th>
                 <th>Estado</th>
                 <th>Fecha de solicitud</th>
-                <th>Candidatos</th>
-                {esGerente && <th></th>}
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {vacantes.map((v) => (
                 <tr key={v.id}>
-                  <td>
-                    <div className="celda-principal">{v.cargo}</div>
-                    {v.descripcion && <div className="celda-secundaria">{v.descripcion}</div>}
-                  </td>
+                  <td className="celda-principal">{v.cargo}</td>
                   <td>{v.cantidad}</td>
                   <td><PrioridadBadge prioridad={v.prioridad} /></td>
                   <td><EstadoBadge estado={v.estado} /></td>
                   <td>{formateador.format(new Date(v.fecha_solicitud))}</td>
                   <td>
-                    {v.candidatos_enviados ? (
-                      <span className="badge badge-estado-abierta">Candidatos recibidos</span>
-                    ) : (
-                      <span className="texto-atenuado">—</span>
-                    )}
+                    <button className="boton boton-secundario" onClick={() => setVacanteDetalle(v)}>
+                      Ver detalle
+                    </button>
                   </td>
-                  {esGerente && (
-                    <td>
-                      {v.candidatos_enviados && (
-                        <button className="boton boton-secundario" onClick={() => setVacanteSeleccionada(v)}>
-                          Ver candidatos
-                        </button>
-                      )}
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>
@@ -119,12 +106,27 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
         />
       )}
 
-      {vacanteSeleccionada && (
+      {vacanteDetalle && (
+        <VacanteDetalleModal
+          vacante={vacanteDetalle}
+          onClose={() => setVacanteDetalle(null)}
+          onVerCandidatos={
+            esGerente && vacanteDetalle.candidatos_enviados
+              ? () => {
+                  setVacanteCandidatos(vacanteDetalle)
+                  setVacanteDetalle(null)
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {vacanteCandidatos && (
         <VerCandidatosModal
-          vacante={vacanteSeleccionada}
-          onClose={() => setVacanteSeleccionada(null)}
+          vacante={vacanteCandidatos}
+          onClose={() => setVacanteCandidatos(null)}
           onContratado={() => {
-            setVacanteSeleccionada(null)
+            setVacanteCandidatos(null)
             cargarVacantes()
           }}
         />
