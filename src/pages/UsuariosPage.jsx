@@ -8,6 +8,29 @@ const ROLES_ASIGNABLES = [
   { value: 'pendiente', etiqueta: 'Pendiente' },
 ]
 
+const OPCIONES_FILTRO_ROL = [
+  { value: 'todos', etiqueta: 'Todos' },
+  { value: 'gerente', etiqueta: 'Gerente' },
+  { value: 'coordinador', etiqueta: 'Coordinador' },
+  { value: 'pendiente', etiqueta: 'Pendiente' },
+  { value: 'superadmin', etiqueta: 'Superadmin' },
+]
+
+async function extraerMensajeError(error, mensajePorDefecto) {
+  if (!error) return mensajePorDefecto
+
+  if (typeof error.context?.json === 'function') {
+    try {
+      const cuerpo = await error.context.json()
+      if (cuerpo?.error) return cuerpo.error
+    } catch {
+      // El cuerpo de la respuesta no era JSON legible; se usa el mensaje por defecto.
+    }
+  }
+
+  return error.message || mensajePorDefecto
+}
+
 export default function UsuariosPage() {
   const { perfil, user } = useOutletContext()
 
@@ -15,8 +38,11 @@ export default function UsuariosPage() {
   const [departamentos, setDepartamentos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [mensajeExito, setMensajeExito] = useState('')
   const [edicion, setEdicion] = useState({})
   const [guardandoId, setGuardandoId] = useState(null)
+  const [eliminandoId, setEliminandoId] = useState(null)
+  const [filtroRol, setFiltroRol] = useState('todos')
 
   const cargarDatos = useCallback(async () => {
     setCargando(true)
@@ -66,7 +92,7 @@ export default function UsuariosPage() {
     const cambios = edicion[usuario.id]
     if (!cambios) return false
     const departamentoOriginal = usuario.departamento_id ?? ''
-    return cambios.rol !== usuario.rol || cambios.departamento_id !== departamentoOriginal
+    return cambios.rol !== usuario.rol || String(cambios.departamento_id) !== String(departamentoOriginal)
   }
 
   const handleGuardar = async (usuario) => {
@@ -75,6 +101,7 @@ export default function UsuariosPage() {
 
     setGuardandoId(usuario.id)
     setError('')
+    setMensajeExito('')
 
     const { error } = await supabase
       .from('perfiles')
@@ -99,6 +126,42 @@ export default function UsuariosPage() {
     cargarDatos()
   }
 
+  const handleEliminar = async (usuario) => {
+    const confirmado = window.confirm(
+      `¿Seguro que deseas eliminar a ${usuario.nombre_completo || 'este usuario'}? Esta acción no se puede deshacer.`,
+    )
+    if (!confirmado) return
+
+    setEliminandoId(usuario.id)
+    setError('')
+    setMensajeExito('')
+
+    const { data, error } = await supabase.functions.invoke('eliminar-usuario', {
+      body: { user_id: usuario.id },
+    })
+
+    setEliminandoId(null)
+
+    if (error || data?.error) {
+      const mensaje = error
+        ? await extraerMensajeError(error, 'No se pudo eliminar el usuario. Intenta de nuevo.')
+        : data.error
+      setError(mensaje)
+      return
+    }
+
+    setUsuarios((prev) => prev.filter((u) => u.id !== usuario.id))
+    setEdicion((prev) => {
+      const copia = { ...prev }
+      delete copia[usuario.id]
+      return copia
+    })
+    setMensajeExito(`Usuario "${usuario.nombre_completo || ''}" eliminado correctamente.`)
+  }
+
+  const usuariosFiltrados =
+    filtroRol === 'todos' ? usuarios : usuarios.filter((usuario) => usuario.rol === filtroRol)
+
   return (
     <div className="contenedor-dashboard">
       <div className="cabecera-seccion">
@@ -110,13 +173,27 @@ export default function UsuariosPage() {
         </div>
       </div>
 
+      <div className="barra-filtros">
+        <label>
+          Rol
+          <select value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)}>
+            {OPCIONES_FILTRO_ROL.map((opcion) => (
+              <option key={opcion.value} value={opcion.value}>
+                {opcion.etiqueta}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       {error && <p className="mensaje-error">{error}</p>}
+      {mensajeExito && <p className="mensaje-exito">{mensajeExito}</p>}
 
       {cargando ? (
         <p className="texto-atenuado">Cargando usuarios…</p>
-      ) : usuarios.length === 0 ? (
+      ) : usuariosFiltrados.length === 0 ? (
         <div className="estado-vacio">
-          <p>No hay usuarios registrados.</p>
+          <p>{usuarios.length === 0 ? 'No hay usuarios registrados.' : 'No hay usuarios con este rol.'}</p>
         </div>
       ) : (
         <div className="contenedor-tabla">
@@ -130,8 +207,8 @@ export default function UsuariosPage() {
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((usuario) => {
-                const esSuperadmin = usuario.rol === 'superadmin'
+              {usuariosFiltrados.map((usuario) => {
+                const esSuperadminFila = usuario.rol === 'superadmin'
                 const esUsuarioActual = usuario.id === user.id
                 const modificado = estaModificado(usuario)
 
@@ -142,7 +219,7 @@ export default function UsuariosPage() {
                       {esUsuarioActual && <div className="celda-secundaria">Tú</div>}
                     </td>
                     <td>
-                      {esSuperadmin ? (
+                      {esSuperadminFila ? (
                         <span className="badge badge-superadmin">Superadmin</span>
                       ) : (
                         <select
@@ -158,7 +235,7 @@ export default function UsuariosPage() {
                       )}
                     </td>
                     <td>
-                      {esSuperadmin ? (
+                      {esSuperadminFila ? (
                         <span className="texto-atenuado">—</span>
                       ) : (
                         <select
@@ -175,15 +252,26 @@ export default function UsuariosPage() {
                       )}
                     </td>
                     <td>
-                      {!esSuperadmin && (
-                        <button
-                          className="boton boton-primario"
-                          disabled={!modificado || guardandoId === usuario.id}
-                          onClick={() => handleGuardar(usuario)}
-                        >
-                          {guardandoId === usuario.id ? 'Guardando…' : 'Guardar'}
-                        </button>
-                      )}
+                      <div className="acciones-fila">
+                        {!esSuperadminFila && (
+                          <button
+                            className="boton boton-primario"
+                            disabled={!modificado || guardandoId === usuario.id}
+                            onClick={() => handleGuardar(usuario)}
+                          >
+                            {guardandoId === usuario.id ? 'Guardando…' : 'Guardar'}
+                          </button>
+                        )}
+                        {!esUsuarioActual && (
+                          <button
+                            className="boton boton-peligro"
+                            disabled={eliminandoId === usuario.id}
+                            onClick={() => handleEliminar(usuario)}
+                          >
+                            {eliminandoId === usuario.id ? 'Eliminando…' : 'Eliminar'}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )

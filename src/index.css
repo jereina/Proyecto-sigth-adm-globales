@@ -573,6 +573,17 @@ p {
   font-size: 13px;
 }
 
+.acciones-fila {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.acciones-fila .boton {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
 .boton-peligro {
   background: var(--color-superficie);
   color: var(--color-error);
