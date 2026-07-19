@@ -2,14 +2,18 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { EstadoBadge, PrioridadBadge } from '../components/EstadoBadge'
 import NuevaVacanteModal from '../components/NuevaVacanteModal'
+import VerCandidatosModal from '../components/VerCandidatosModal'
 
 const formateador = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' })
 
 export default function GerenteDashboard({ perfil, userId, soloLectura = false }) {
+  const esGerente = !soloLectura
+
   const [vacantes, setVacantes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
+  const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null)
 
   const cargarVacantes = useCallback(async () => {
     setCargando(true)
@@ -23,7 +27,8 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
     if (error) {
       setError('No se pudieron cargar las vacantes.')
     } else {
-      setVacantes(data)
+      // Las vacantes cerradas por contratación pasan a "Histórico" y ya no viven aquí.
+      setVacantes(data.filter((v) => !(v.estado === 'cerrada' && v.fecha_contratacion)))
     }
     setCargando(false)
   }, [])
@@ -64,6 +69,8 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
                 <th>Prioridad</th>
                 <th>Estado</th>
                 <th>Fecha de solicitud</th>
+                <th>Candidatos</th>
+                {esGerente && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -77,6 +84,22 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
                   <td><PrioridadBadge prioridad={v.prioridad} /></td>
                   <td><EstadoBadge estado={v.estado} /></td>
                   <td>{formateador.format(new Date(v.fecha_solicitud))}</td>
+                  <td>
+                    {v.candidatos_enviados ? (
+                      <span className="badge badge-estado-abierta">Candidatos recibidos</span>
+                    ) : (
+                      <span className="texto-atenuado">—</span>
+                    )}
+                  </td>
+                  {esGerente && (
+                    <td>
+                      {v.candidatos_enviados && (
+                        <button className="boton boton-secundario" onClick={() => setVacanteSeleccionada(v)}>
+                          Ver candidatos
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -91,6 +114,17 @@ export default function GerenteDashboard({ perfil, userId, soloLectura = false }
           onClose={() => setModalAbierto(false)}
           onCreada={() => {
             setModalAbierto(false)
+            cargarVacantes()
+          }}
+        />
+      )}
+
+      {vacanteSeleccionada && (
+        <VerCandidatosModal
+          vacante={vacanteSeleccionada}
+          onClose={() => setVacanteSeleccionada(null)}
+          onContratado={() => {
+            setVacanteSeleccionada(null)
             cargarVacantes()
           }}
         />

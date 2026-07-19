@@ -4,6 +4,7 @@ const SECCIONES = [
   { to: '/vacantes', etiqueta: 'Vacantes', icono: '📋', roles: ['superadmin', 'gerente', 'coordinador'] },
   { to: '/cargos', etiqueta: 'Descripción de cargo', icono: '🗂️', roles: ['superadmin', 'gerente', 'coordinador'] },
   { to: '/organigrama', etiqueta: 'Organigrama', icono: '🏢', roles: ['superadmin', 'gerente', 'coordinador'] },
+  { to: '/historico', etiqueta: 'Histórico', icono: '📜', roles: ['superadmin', 'gerente', 'coordinador'] },
   { to: '/usuarios', etiqueta: 'Gestión de usuarios', icono: '👥', roles: ['superadmin'] },
 ]
 

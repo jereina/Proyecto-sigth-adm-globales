@@ -8,6 +8,7 @@ import VacantesPage from './pages/VacantesPage'
 import CargosPage from './pages/CargosPage'
 import UsuariosPage from './pages/UsuariosPage'
 import OrganigramaPage from './pages/OrganigramaPage'
+import HistoricoPage from './pages/HistoricoPage'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="vacantes" element={<VacantesPage />} />
             <Route path="cargos" element={<CargosPage />} />
             <Route path="organigrama" element={<OrganigramaPage />} />
+            <Route path="historico" element={<HistoricoPage />} />
             <Route path="usuarios" element={<UsuariosPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
