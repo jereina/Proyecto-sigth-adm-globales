@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import CargoModal from '../components/CargoModal'
@@ -9,6 +9,8 @@ export default function CargosPage() {
   const esSuperadmin = perfil.rol === 'superadmin'
 
   const [cargos, setCargos] = useState([])
+  const [departamentos, setDepartamentos] = useState([])
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('')
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
@@ -18,11 +20,7 @@ export default function CargosPage() {
     setCargando(true)
     setError('')
 
-    const consulta = esSuperadmin
-      ? supabase.from('cargos').select('*, departamento:departamentos(nombre)').order('nombre')
-      : supabase.from('cargos').select('*').order('nombre')
-
-    const { data, error } = await consulta
+    const { data, error } = await supabase.from('cargos').select('*').order('nombre')
 
     if (error) {
       setError('No se pudieron cargar los cargos.')
@@ -30,11 +28,41 @@ export default function CargosPage() {
       setCargos(data)
     }
     setCargando(false)
-  }, [esSuperadmin])
+  }, [])
 
   useEffect(() => {
     cargarCargos()
   }, [cargarCargos])
+
+  useEffect(() => {
+    if (!esSuperadmin) return
+    let activo = true
+
+    supabase
+      .from('departamentos')
+      .select('id, nombre')
+      .order('nombre')
+      .then(({ data, error }) => {
+        if (!activo || error) return
+        setDepartamentos(data)
+      })
+
+    return () => {
+      activo = false
+    }
+  }, [esSuperadmin])
+
+  const conteoPorDepartamento = useMemo(() => {
+    const mapa = {}
+    cargos.forEach((cargo) => {
+      mapa[cargo.departamento_id] = (mapa[cargo.departamento_id] ?? 0) + 1
+    })
+    return mapa
+  }, [cargos])
+
+  const cargosVisibles = esSuperadmin
+    ? cargos.filter((cargo) => String(cargo.departamento_id) === departamentoSeleccionado)
+    : cargos
 
   const handleEliminar = async (cargo) => {
     const confirmado = window.confirm(`¿Eliminar el cargo "${cargo.nombre}"? Esta acción no se puede deshacer.`)
@@ -57,7 +85,7 @@ export default function CargosPage() {
           <h2>Descripción de cargo</h2>
           <p className="texto-atenuado">
             {esSuperadmin
-              ? 'Cargos definidos en todos los departamentos.'
+              ? 'Selecciona un departamento para ver sus cargos.'
               : 'Cargos definidos para tu departamento.'}
           </p>
         </div>
@@ -74,23 +102,47 @@ export default function CargosPage() {
         )}
       </div>
 
+      {esSuperadmin && (
+        <div className="barra-filtros">
+          <label>
+            Departamento
+            <select
+              value={departamentoSeleccionado}
+              onChange={(e) => setDepartamentoSeleccionado(e.target.value)}
+            >
+              <option value="">Selecciona un departamento</option>
+              {departamentos.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nombre} ({conteoPorDepartamento[d.id] ?? 0})
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
       {error && <p className="mensaje-error">{error}</p>}
 
       {cargando ? (
         <p className="texto-atenuado">Cargando cargos…</p>
-      ) : cargos.length === 0 ? (
+      ) : esSuperadmin && !departamentoSeleccionado ? (
         <div className="estado-vacio">
-          <p>Aún no hay cargos registrados.</p>
+          <p>Selecciona un departamento para ver sus cargos.</p>
+        </div>
+      ) : cargosVisibles.length === 0 ? (
+        <div className="estado-vacio">
+          <p>
+            {esSuperadmin
+              ? 'Este departamento aún no tiene cargos definidos.'
+              : 'Aún no hay cargos registrados.'}
+          </p>
         </div>
       ) : (
         <div className="grid-cargos">
-          {cargos.map((cargo) => (
+          {cargosVisibles.map((cargo) => (
             <div className="tarjeta-cargo" key={cargo.id}>
               <div className="cabecera-tarjeta-cargo">
                 <h3>{cargo.nombre}</h3>
-                {esSuperadmin && cargo.departamento?.nombre && (
-                  <span className="badge badge-departamento">{cargo.departamento.nombre}</span>
-                )}
               </div>
               <p className="descripcion-cargo">{cargo.descripcion || 'Sin descripción.'}</p>
               {esGerente && (
