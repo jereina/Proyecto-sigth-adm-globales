@@ -139,7 +139,15 @@ export default function OrganigramaPage() {
         </div>
 
         {esGerente && (
-          <div>
+          <div className="acciones-organigrama">
+            <a
+              href="/plantilla-organigrama.svg"
+              download="plantilla-organigrama-sigth.svg"
+              className="boton boton-secundario"
+            >
+              Descargar plantilla
+            </a>
+
             <input
               type="file"
               accept="image/png, image/jpeg"

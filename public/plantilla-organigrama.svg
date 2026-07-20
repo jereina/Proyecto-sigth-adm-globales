@@ -1,0 +1,57 @@
+<svg width="900" height="470" viewBox="0 0 900 470" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="470" rx="12" fill="#ffffff" stroke="#e2e6ec" stroke-width="1"/>
+
+  <text x="450" y="38" text-anchor="middle" font-size="24" font-weight="700" fill="#1e3a5f">Plantilla de Organigrama</text>
+  <text x="450" y="62" text-anchor="middle" font-size="13" fill="#64748b">SIGTH · ADM Globales 7480 — Reemplaza cada casilla con los cargos reales de tu área</text>
+
+  <!-- Conectores -->
+  <g stroke="#94a3b8" stroke-width="2" fill="none">
+    <line x1="450" y1="170" x2="450" y2="200"/>
+    <line x1="270" y1="200" x2="630" y2="200"/>
+    <line x1="270" y1="200" x2="270" y2="230"/>
+    <line x1="630" y1="200" x2="630" y2="230"/>
+
+    <line x1="270" y1="285" x2="270" y2="310"/>
+    <line x1="180" y1="310" x2="360" y2="310"/>
+    <line x1="180" y1="310" x2="180" y2="340"/>
+    <line x1="360" y1="310" x2="360" y2="340"/>
+
+    <line x1="630" y1="285" x2="630" y2="310"/>
+    <line x1="540" y1="310" x2="720" y2="310"/>
+    <line x1="540" y1="310" x2="540" y2="340"/>
+    <line x1="720" y1="310" x2="720" y2="340"/>
+  </g>
+
+  <!-- Nivel 1: Gerente / Jefe de departamento -->
+  <rect x="310" y="110" width="280" height="60" rx="10" fill="#eef2f7" stroke="#1e3a5f" stroke-width="2"/>
+  <text x="450" y="134" text-anchor="middle" font-size="16" font-weight="700" fill="#1e3a5f">Gerente / Jefe de</text>
+  <text x="450" y="153" text-anchor="middle" font-size="16" font-weight="700" fill="#1e3a5f">Departamento</text>
+
+  <!-- Nivel 2: Coordinador(es) -->
+  <rect x="150" y="230" width="240" height="55" rx="10" fill="#ffffff" stroke="#1e3a5f" stroke-width="2"/>
+  <text x="270" y="263" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a5f">Coordinador 1</text>
+
+  <rect x="510" y="230" width="240" height="55" rx="10" fill="#ffffff" stroke="#1e3a5f" stroke-width="2"/>
+  <text x="630" y="263" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a5f">Coordinador 2</text>
+
+  <!-- Nivel 3: Analistas / Cargos operativos -->
+  <rect x="95" y="340" width="170" height="55" rx="10" fill="#f8fafc" stroke="#1e3a5f" stroke-width="2"/>
+  <text x="180" y="362" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Analista /</text>
+  <text x="180" y="379" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Cargo operativo</text>
+
+  <rect x="275" y="340" width="170" height="55" rx="10" fill="#f8fafc" stroke="#1e3a5f" stroke-width="2"/>
+  <text x="360" y="362" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Analista /</text>
+  <text x="360" y="379" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Cargo operativo</text>
+
+  <rect x="455" y="340" width="170" height="55" rx="10" fill="#f8fafc" stroke="#1e3a5f" stroke-width="2"/>
+  <text x="540" y="362" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Analista /</text>
+  <text x="540" y="379" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Cargo operativo</text>
+
+  <rect x="635" y="340" width="170" height="55" rx="10" fill="#f8fafc" stroke="#1e3a5f" stroke-width="2"/>
+  <text x="720" y="362" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Analista /</text>
+  <text x="720" y="379" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1e3a5f">Cargo operativo</text>
+
+  <text x="450" y="440" text-anchor="middle" font-size="12" font-style="italic" fill="#64748b">
+    Guía de ejemplo: agrega o quita casillas según la estructura real de tu departamento.
+  </text>
+</svg>
