@@ -141,8 +141,8 @@ export default function OrganigramaPage() {
         {esGerente && (
           <div className="acciones-organigrama">
             <a
-              href="/plantilla-organigrama.svg"
-              download="plantilla-organigrama-sigth.svg"
+              href="/plantilla-organigrama.pdf"
+              download="plantilla-organigrama-sigth.pdf"
               className="boton boton-secundario"
             >
               Descargar plantilla
